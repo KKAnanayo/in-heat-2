@@ -1,27 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 
 function Cart() {
     const [cartItems, setCartItems] = useState([]);
-    const [loading, setLoading] = useState(true);
-
     useEffect(() => {
         const userId = localStorage.getItem("userId");
-        if (!userId) return;
         fetch(`http://localhost:3003/cart/${userId}`)
             .then(res => res.json())
-            .then(data => {
-                setCartItems(data);
-                setLoading(false);
-            });
+            .then(setCartItems);
     }, []);
-
-    if (loading) return <div>Loading cart...</div>;
-
-    if (cartItems.length === 0) return <div>Your cart is empty.</div>;
-
+    if (!cartItems.length) return <div>Your cart is empty.</div>;
     return (
-        <div className="cart-container">
+        <div>
             <h2>Your Cart</h2>
             <ul>
                 {cartItems.map(item => (
@@ -35,11 +24,8 @@ function Cart() {
                     </li>
                 ))}
             </ul>
-            <Link to="/cart">Cart</Link>
         </div>
     );
 }
 
 export default Cart;
-
-<Route path="/cart" element={<Cart />} />

@@ -200,10 +200,7 @@ function Product() {
             const data = await res.json();
             if (res.ok) {
                 setMessage("Added to cart!");
-                // Optionally, refresh product info to update stock
-                fetch(`http://localhost:3002/products/${product._id}`)
-                    .then(res => res.json())
-                    .then(setProduct);
+                setTimeout(() => navigate("/cart"), 1000); // Redirect after 1 second
             } else {
                 setMessage(data.message || "Could not add to cart.");
             }
@@ -280,6 +277,9 @@ function Product() {
                     {adding ? "Adding..." : "Add to Cart"}
                 </button>
                 {message && <p style={{ marginTop: "1rem", color: message.includes("Added") ? "green" : "red" }}>{message}</p>}
+                {message === "Added to cart!" && (
+                    <button onClick={() => navigate("/cart")}>Go to Cart</button>
+                )}
                 <Link to={`/product/${product._id}`}>View</Link>
             </div>
         );
