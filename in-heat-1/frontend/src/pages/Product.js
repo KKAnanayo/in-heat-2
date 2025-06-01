@@ -11,6 +11,7 @@ function Product() {
     const [adding, setAdding] = useState(false);
     const [user, setUser] = useState(null);
     const [sellerProducts, setSellerProducts] = useState([]);
+    const [seller, setSeller] = useState(null);
     const [form, setForm] = useState({
         name: "",
         description: "",
@@ -21,6 +22,7 @@ function Product() {
     });
     const [formMsg, setFormMsg] = useState("");
     const [editingId, setEditingId] = useState(null);
+    const [cartQuantity, setCartQuantity] = useState(1);
     const navigate = useNavigate();
 
     // Fetch user
@@ -60,6 +62,11 @@ function Product() {
             .then((data) => {
                 if (data && data.name) {
                     setProduct(data);
+                    // Fetch seller info
+                    fetch(`http://localhost:3001/users/${data.sellerId}`)
+                        .then(res => res.json())
+                        .then(setSeller)
+                        .catch(() => setSeller(null));
                 } else {
                     setError("Product not found");
                 }
@@ -166,7 +173,12 @@ function Product() {
         setMessage("");
         const userId = localStorage.getItem("userId");
         if (!userId) {
-            setMessage("You must be logged in to add to cart.");
+            setMessage("Please log in to add to cart.");
+            setAdding(false);
+            return;
+        }
+        if (cartQuantity > product.quantity) {
+            setMessage("Not enough stock.");
             setAdding(false);
             return;
         }
@@ -174,12 +186,12 @@ function Product() {
             userId,
             productId: product._id,
             sellerId: product.sellerId,
-            quantity: 1,
+            quantity: cartQuantity,
             price: product.price,
             name: product.name
         };
         try {
-            const res = await fetch("http://localhost:3003/cart/add", {
+            const res = await fetch("http://localhost:3003/cart", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
@@ -187,11 +199,15 @@ function Product() {
             const data = await res.json();
             if (res.ok) {
                 setMessage("Added to cart!");
+                // Optionally, refresh product info to update stock
+                fetch(`http://localhost:3002/products/${product._id}`)
+                    .then(res => res.json())
+                    .then(setProduct);
             } else {
-                setMessage(data.message || "Error adding to cart");
+                setMessage(data.message || "Could not add to cart.");
             }
         } catch {
-            setMessage("Error adding to cart");
+            setMessage("Error adding to cart.");
         }
         setAdding(false);
     };
@@ -245,7 +261,23 @@ function Product() {
                 <p><strong>Price:</strong> ${product.price?.toFixed(2)}</p>
                 <p><strong>Stock:</strong> {product.quantity}</p>
                 <p><strong>Category:</strong> {product.category}</p>
-                <button onClick={handleAddToCart} disabled={adding}>{adding ? "Adding..." : "Add to Cart"}</button>
+                {seller && (
+                    <p><strong>Seller:</strong> {seller.name || seller.email}</p>
+                )}
+                <label>
+                    Quantity:
+                    <input
+                        type="number"
+                        min="1"
+                        max={product.quantity}
+                        value={cartQuantity}
+                        onChange={e => setCartQuantity(Math.max(1, Math.min(product.quantity, Number(e.target.value))))}
+                        style={{ width: "60px", marginLeft: "8px" }}
+                    />
+                </label>
+                <button onClick={handleAddToCart} disabled={adding || cartQuantity > product.quantity}>
+                    {adding ? "Adding..." : "Add to Cart"}
+                </button>
                 {message && <p style={{ marginTop: "1rem", color: message.includes("Added") ? "green" : "red" }}>{message}</p>}
             </div>
         );
