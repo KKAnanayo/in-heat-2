@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import "./Product.css";
 
 function Product() {
@@ -156,15 +156,16 @@ function Product() {
         if (!window.confirm("Are you sure you want to delete this product?")) return;
         try {
             const res = await fetch(`http://localhost:3002/products/${prodId}`, {
-                method: "DELETE"
+                method: "DELETE",
             });
             if (res.ok) {
-                setSellerProducts(prev => prev.filter(p => p._id !== prodId));
+                // Optionally, refresh the product list or navigate away
+                window.location.href = "/"; // or use navigate("/") if using react-router
             } else {
-                alert("Error deleting product");
+                alert("Failed to delete product.");
             }
         } catch {
-            alert("Error deleting product");
+            alert("Error deleting product.");
         }
     };
 
@@ -279,6 +280,7 @@ function Product() {
                     {adding ? "Adding..." : "Add to Cart"}
                 </button>
                 {message && <p style={{ marginTop: "1rem", color: message.includes("Added") ? "green" : "red" }}>{message}</p>}
+                <Link to={`/product/${product._id}`}>View</Link>
             </div>
         );
     }
