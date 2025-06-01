@@ -155,17 +155,19 @@ function Product() {
     const handleDelete = async (prodId) => {
         if (!window.confirm("Are you sure you want to delete this product?")) return;
         try {
+            const userId = localStorage.getItem("userId");
             const res = await fetch(`http://localhost:3002/products/${prodId}`, {
                 method: "DELETE",
+                headers: { 'user-id': userId }
             });
             if (res.ok) {
-                // Optionally, refresh the product list or navigate away
-                window.location.href = "/"; // or use navigate("/") if using react-router
+                setSellerProducts(prev => prev.filter(p => p._id !== prodId));
             } else {
-                alert("Failed to delete product.");
+                const data = await res.json();
+                alert(data.message || "Error deleting product");
             }
         } catch {
-            alert("Error deleting product.");
+            alert("Error deleting product");
         }
     };
 

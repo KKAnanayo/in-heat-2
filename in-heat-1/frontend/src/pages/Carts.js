@@ -10,6 +10,7 @@ function Cart() {
 
     useEffect(() => {
         const userId = localStorage.getItem('userId');
+        console.log('Cart page userId:', userId); // Debug userId
         if (!userId) {
             setError('You are not logged in.');
             setLoading(false);
@@ -18,6 +19,7 @@ function Cart() {
         fetch(`http://localhost:3003/cart/${userId}`)
             .then(res => res.json())
             .then(async data => {
+                console.log('Cart API response:', data); // Debug cart API response
                 const items = data.items || [];
                 // Fetch product details for each item to get image
                 const itemsWithImages = await Promise.all(items.map(async (item) => {
@@ -101,7 +103,20 @@ function Cart() {
                                 <div className="cart-item-info">
                                     <h3>{item.name}</h3>
                                     <p>Price: ${item.price?.toFixed(2)}</p>
-                                    <p>Quantity: {item.quantity}</p>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <span>Quantity:</span>
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            max={item.maxStock || 99}
+                                            value={item.quantity}
+                                            onChange={e => {
+                                                const newQty = Math.max(1, Math.min(Number(e.target.value), item.maxStock || 99));
+                                                setCartItems(prev => prev.map(ci => ci.productId === item.productId ? { ...ci, quantity: newQty } : ci));
+                                            }}
+                                            style={{ width: '60px' }}
+                                        />
+                                    </div>
                                     <p>Subtotal: ${(item.price * item.quantity).toFixed(2)}</p>
                                 </div>
                             </div>
@@ -110,7 +125,7 @@ function Cart() {
                     <div className="cart-total">
                         <h3>Total: ${totalPrice.toFixed(2)}</h3>
                         <button className="checkout-btn" onClick={handleConfirmOrder} disabled={confirming}>
-                            {confirming ? "Confirming..." : "Confirm Order"}
+                            {confirming ? "Placing..." : "Place Order"}
                         </button>
                         {message && <p style={{marginTop:'1rem', color: message === "Order confirmed!" ? "green" : "red"}}>{message}</p>}
                     </div>
