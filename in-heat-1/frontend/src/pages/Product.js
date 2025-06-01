@@ -174,12 +174,7 @@ function Product() {
         setMessage("");
         const userId = localStorage.getItem("userId");
         if (!userId) {
-            setMessage("Please log in to add to cart.");
-            setAdding(false);
-            return;
-        }
-        if (cartQuantity > product.quantity) {
-            setMessage("Not enough stock.");
+            setMessage("You must be logged in to add to cart.");
             setAdding(false);
             return;
         }
@@ -187,12 +182,12 @@ function Product() {
             userId,
             productId: product._id,
             sellerId: product.sellerId,
-            quantity: cartQuantity,
+            quantity: 1,
             price: product.price,
             name: product.name
         };
         try {
-            const res = await fetch("http://localhost:3003/cart", {
+            const res = await fetch("http://localhost:3003/cart/add", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
@@ -200,12 +195,12 @@ function Product() {
             const data = await res.json();
             if (res.ok) {
                 setMessage("Added to cart!");
-                setTimeout(() => navigate("/cart"), 1000); // Redirect after 1 second
+                navigate("/carts"); // Redirect to cart after adding
             } else {
-                setMessage(data.message || "Could not add to cart.");
+                setMessage(data.message || "Error adding to cart");
             }
         } catch {
-            setMessage("Error adding to cart.");
+            setMessage("Error adding to cart");
         }
         setAdding(false);
     };
